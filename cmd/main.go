@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chat-backend-final/internals/config"
 	"chat-backend-final/internals/http-server/handlers"
 	"chat-backend-final/internals/storage"
 	"github.com/go-chi/chi/v5"
@@ -12,11 +13,10 @@ import (
 	"net/http"
 )
 
-// TODO: -config
-
 func main() {
+	cfg := config.MustLoad()
 	r := chi.NewRouter()
-	st, err := storage.New("storage/storage.db")
+	st, err := storage.New(cfg.StoragePath)
 	if err != nil {
 		log.Println("failed to open/create storage", err)
 		return
@@ -25,7 +25,7 @@ func main() {
 		Transports: []transport.Transport{
 			&websocket.Transport{
 				CheckOrigin: func(r *http.Request) bool {
-					// CORS settings.
+					// CORS settings
 					// TODO: add allow-origin for your host
 					return true
 				},
@@ -37,8 +37,10 @@ func main() {
 	defer socket.Close()
 
 	r.HandleFunc("/socket.io/", handlers.HandlerWS(st, socket))
+	r.HandleFunc("/api/messages", handlers.HandlerAPI(st))
+
 	server := http.Server{
-		Addr:    ":8000",
+		Addr:    cfg.Address,
 		Handler: r,
 	}
 	log.Println("Server start on..", server.Addr)
