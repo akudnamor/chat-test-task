@@ -13,9 +13,11 @@ import (
 )
 
 func HandlerWS(st *storage.Storage, socket *socketio.Server) func(http.ResponseWriter, *http.Request) {
-	socket.OnEvent("/", "message", func(s socketio.Conn, msg storage.Message) error {
+	socket.OnEvent("/", "message", func(s socketio.Conn, msg storage.Message) string {
 		if strings.Contains(msg.Text, "testWordForValidation") {
-			return errors.New("incorrect word")
+			err := errors.New("incorrect word")
+			log.Println(err)
+			return err.Error()
 		}
 
 		// TODO: add some other checks for input validation
@@ -24,12 +26,12 @@ func HandlerWS(st *storage.Storage, socket *socketio.Server) func(http.ResponseW
 		id, err := st.AddMessage(msg)
 		msg.ID = id
 		if err != nil {
-			log.Println("failed to add message in DB", err)
-			return err
+			log.Println("failed to add message in DB" + err.Error())
+			return "failed to add message in DB" + err.Error()
 		}
 		socket.BroadcastToNamespace("/", "message", msg)
 
-		return nil
+		return ""
 	})
 	socket.OnConnect("/", func(s socketio.Conn) error {
 		log.Println("connected id:", s.ID())

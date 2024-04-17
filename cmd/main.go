@@ -16,7 +16,7 @@ import (
 func main() {
 	cfg := config.MustLoad()
 	r := chi.NewRouter()
-	st, err := storage.New(cfg.StoragePath)
+	st, err := storage.New(cfg.StoragePath) // storage_path: "./storage/storage.db"
 	if err != nil {
 		log.Println("failed to open/create storage", err)
 		return
@@ -40,7 +40,7 @@ func main() {
 	r.HandleFunc("/api/messages", handlers.HandlerAPI(st))
 
 	server := http.Server{
-		Addr:    cfg.Address,
+		Addr:    cfg.Address, // address: "localhost:8000"
 		Handler: r,
 	}
 	log.Println("Server start on..", server.Addr)
